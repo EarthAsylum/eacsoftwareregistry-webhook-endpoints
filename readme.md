@@ -1,9 +1,9 @@
-# {eac}SoftwareRegistry WooCommerce Webhook Endpoints   
+## {eac}SoftwareRegistry WooCommerce Webhook Endpoints   
 [![EarthAsylum Consulting](https://img.shields.io/badge/EarthAsylum-Consulting-0?&labelColor=6e9882&color=707070)](https://earthasylum.com/)
 [![WordPress](https://img.shields.io/badge/WordPress-Plugins-grey?logo=wordpress&labelColor=blue)](https://wordpress.org/plugins/search/EarthAsylum/)
-[![eacDoojigger](https://img.shields.io/badge/Requires-{eac}Doojigger-da821d)](https://eacDoojigger.earthasylum.com/)
+[![eacDoojigger](https://img.shields.io/badge/Requires-%7Beac%7DDoojigger-da821d)](https://eacDoojigger.earthasylum.com/)
 
-<details><summary>Plugin Header</summary><samp>
+<details><summary>Plugin Header</summary>
 
 Plugin URI:         https://swregistry.earthasylum.com/webhooks-for-woocommerce/  
 Author:             [EarthAsylum Consulting](https://www.earthasylum.com)  
@@ -18,11 +18,12 @@ License URI:        https://www.gnu.org/licenses/gpl.html
 Tags:               software registration, software registry, software license, WooCommerce, Webhooks, subscriptions, {eac}SoftwareRegistry  
 WordPress URI:      https://wordpress.org/plugins/eacsoftwareregistry-webhook-endpoints  
 Github URI:         https://github.com/EarthAsylum/eacsoftwareregistry-webhook-endpoints  
-</samp></details>
 
-**_Enables the use of WooCommerce Webhooks to create or update a software registration in {eac}SoftwareRegistry when an order or subscription is created or updated._**
+</details>
 
-## Description
+> Enables the use of WooCommerce Webhooks to create or update a software registration in {eac}SoftwareRegistry when an order or subscription is created or updated.
+
+### Description
 
 **{eac}SoftwareRegistry Webhook Endpoints** is an extension plugin to [{eac}SoftwareRegistry Software Registration Server](https://swregistry.earthasylum.com/software-registration-server/).
 
@@ -114,7 +115,7 @@ When a new (or renewal) subscription order is created, it will trigger the "Orde
 On the other hand, since this plugin adds an array of subscription records to the orders passed through the webhooks, you may prefer to use only the order webhooks and not the subscription webhook.
 
 
-## Installation
+### Installation
 
 **{eac}SoftwareRegistry Webhook Endpoints** is an extension plugin to and requires installation and registration of [{eac}SoftwareRegistry](https://swregistry.earthasylum.com/).
 
@@ -141,7 +142,7 @@ See [Managing Plugins -> Manual Plugin Installation](https://wordpress.org/suppo
 Options for this extension will be added to the *Software Registry → Settings → Woocommerce* tab.
 
 
-## Screenshots
+### Screenshots
 
 1. Software Registry → Settings → WooCommerce
 ![{eac}SoftwareRegistry WooCommerce Integration](https://ps.w.org/eacsoftwareregistry-webhook-endpoints/assets/screenshot-1.png)
@@ -150,7 +151,7 @@ Options for this extension will be added to the *Software Registry → Settings 
 ![{eac}SoftwareRegistry WooCommerce Integration](https://ps.w.org/eacsoftwareregistry-webhook-endpoints/assets/screenshot-2.png)
 
 
-## Other Notes
+### Other Notes
 
 #### See Also
 
