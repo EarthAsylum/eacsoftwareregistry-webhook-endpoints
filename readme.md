@@ -7,10 +7,10 @@
 
 Plugin URI:         https://swregistry.earthasylum.com/webhooks-for-woocommerce/  
 Author:             [EarthAsylum Consulting](https://www.earthasylum.com)  
-Stable tag:         1.0.10  
-Last Updated:       08-Jun-2023  
+Stable tag:         1.1.0  
+Last Updated:       04-Apr-2024  
 Requires at least:  5.5.0  
-Tested up to:       6.4  
+Tested up to:       6.5  
 Requires PHP:       7.2  
 Contributors:       [kevinburkholder](https://profiles.wordpress.org/kevinburkholder)  
 License:            GPLv3 or later  
@@ -84,11 +84,11 @@ Since WooCommerce won't allow duplicate SKUs, regular expressions may be used fo
 
 #### Subscriptions
 
-By adding [{eac}SoftwareRegistry Subscriptions for WooCommerce](https://swregistry.earthasylum.com/subscriptions-for-woocommerce/) to your WooCommerce store site, subscription orders and updates, as well as product meta data, may also be passed to your registration server.
+By adding [{eac}SoftwareRegistry Subscriptions for WooCommerce](https://swregistry.earthasylum.com/subscriptions-for-woocommerce/) to your WooCommerce store site, subscription orders and updates (when using [Woo Subscriptions](https://woocommerce.com/document/subscriptions/) or [SUMO Subscription](https://codecanyon.net/item/sumo-subscriptions-woocommerce-subscription-system/16486054)), as well as product meta data, may also be passed to your registration server.
 
 *{eac}SoftwareRegistry Subscriptions for WooCommerce* is a plugin, installed on your WooCommerce site, that adds a custom Webhook topic for subscription updates to the WooCommerrce webhooks, and adds subscription and product data to WooCommerce order webhooks.
 
-On your WooCommerce site, add a new Webhook using **{eac}SoftwareRegistry Subscription updated** for the topic, the same **Webhook Secret** used for the order webhooks, and the **Subscription Delivery URL** rather than the **Order Delivery URL**.
+On your WooCommerce site, add a new Webhook using **{eac}SoftwareRegistry Subscription updated** or **{eac}SoftwareRegistry Sumo Subscription** for the topic; the same **Webhook Secret** used for the order webhooks; and the **Subscription Delivery URL** rather than the **Order Delivery URL**.
 
 With this plugin enabled, not only can you update registrations by order updates, but also by subscription updates, including renewals, expirations, and cancelations, making it easy to keep your registrations in sync with your subscriptions.
 
@@ -113,6 +113,48 @@ With this plugin enabled on your shop site, there's a high probability you don't
 When a new (or renewal) subscription order is created, it will trigger the "Order created", "Order updated" (payment processed) and the "Subscription updated" webhooks when all you need is the subscription to create or update the registration.
 
 On the other hand, since this plugin adds an array of subscription records to the orders passed through the webhooks, you may prefer to use only the order webhooks and not the subscription webhook.
+
+
+#### Return Value
+
+As of version 1.1, this plugin now returns a result array which can be retrieved via the `woocommerce_webhook_delivery` action:
+
+    array(
+        'action'	=> string       // the webhook action,
+        'resource'	=> int          // the webhook resource id (order/subscription id),
+        'status' 	=> string       // 'success' | 'ignored' | 'error',
+        'result'	=> array|string // success: array of [ sku => [status => registry_key | error_message] ]
+                                    // ignored|error: string error_message
+    )
+
+*Note that 'success' means the webhook was succesfull, 'result' could contain an error status/message from {eac}SoftwareRegistry.*
+
+Examples:
+
+    array(
+         'action' => 'order.created',
+         'resource' => 2715,
+         'status' => 'ignored',
+         'result' => 'order with subscription',
+    ),
+
+    array(
+        'action' => 'action.wc_eacswregistry_sumosub',
+        'resource' => 2715,
+        'status' => 'success',
+        'result' => array (
+            0 => array(
+                'eacDoojigger' =>  array(
+                    '200' => 'bad53cd3-f397-4f47-9d28-xxxxxxxxxxxx',
+                ),
+            ),
+            1 => array(
+                'eacSoftwareRegistry' => array(
+                    '406' => 'registration with this email and product already exists',
+                ),
+            ),
+        ),
+    ),
 
 
 ### Installation
@@ -160,5 +202,17 @@ Options for this extension will be added to the *Software Registry → Settings 
 +   [{eac}SoftwareRegistry Subscriptions for WooCommerce](https://swregistry.earthasylum.com/subscriptions-for-woocommerce/)
 
 +   [Implementing the Software Registry SDK](https://swregistry.earthasylum.com/software-registry-sdk/)
+
+
+### Upgrade Notice
+
+#### 1.1.0
+
+This version requires {eac}SoftwareRegistry v1.3.3+
+
+#### 1.0.9
+
+This version requires {eac}SoftwareRegistry v1.2+
+
 
 

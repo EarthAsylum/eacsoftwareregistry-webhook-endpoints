@@ -7,8 +7,8 @@ namespace EarthAsylumConsulting\Extensions;
  * @category	WordPress Plugin
  * @package		{eac}SoftwareRegistry
  * @author		Kevin Burkholder <KBurkholder@EarthAsylum.com>
- * @copyright	Copyright (c) 2023 EarthAsylum Consulting <www.earthasylum.com>
- * @version		1.x
+ * @copyright	Copyright (c) 2024 EarthAsylum Consulting <www.earthasylum.com>
+ * @version		2.x
  */
 
 class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
@@ -16,7 +16,12 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	/**
 	 * @var string extension version
 	 */
-	const VERSION	= '23.0608.1';
+	const VERSION	= '24.0401.1';
+
+	/**
+	 * @var array result data
+	 */
+	private $result	= array();
 
 	/**
 	 * @var array order status to registry status
@@ -39,6 +44,8 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		'pending'		=> 'pending',			// created, not yet paid/active
 		'active'		=> 'active',			// paid/active
 		'on-hold'		=> 'pending',			// placed on hold awaiting payment
+		'pause'			=> 'pending',			// paused subscription ?
+		'trial'			=> 'trial',				// trial subscription (resumed)
 		'expired'		=> 'expired',			// passed end date
 		'pending-cancel'=> 'pending-cancel', 	// cancelled, not yet past pre-paid date (invalid, retains current/default)
 		'cancelled'		=> 'inactive',			// cancelled, past pre-paid date
@@ -80,119 +87,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	 */
 	public function admin_options_settings()
 	{
-		/* Register this extension with [group name, tab name] and settings array */
-		$this->registerExtension( $this->className,
-			[
-				'_order_info' 			=> array(
-								'type'		=> 	'display',
-								'label'		=> 	'<span class="dashicons dashicons-info-outline"></span> Orders',
-								'default'	=>	'WooCommerce Webhooks are used to create or update a registration when a WooCommerce order is created or updated.'.
-												'<p>Webhooks are created by going to: <code>WooCommerce &rarr; Settings &rarr; Advanced &rarr; Webhooks</code> from the dashboard of your WooCommerce shop site. '.
-												'Use <code>Webhook Secret</code> and <code>Order Delivery URL</code> (below) when creating your webhooks.</p>'.
-												'<p>You should create a webhook for <code>Order created</code> and <code>Order updated</code>, '.
-												'and you may optionally create webhooks for <code>Order deleted</code> and <code>Order restored</code> '.
-												'if your want registrations to be terminated or reactivated when an order is moved to the trash or restored.</p>',
-								'info'		=>	'See: <a href="https://swregistry.earthasylum.com/webhooks-for-woocommerce/" target="_blank">{eac}SoftwareRegistry WebHooks for WooCommerce</a>',
-							),
-				'registrar_webhook_key'	=> array(
-								'type'		=> 	'disabled',
-								'label'		=> 	'Webhook Secret',
-								'default'	=>	hash('md5', uniqid(), false),
-								'title'		=>	'Your WooCommerce Webhook Secret.',
-								'info'		=>	'Used to authenticate webhook requests from your WooCommerce site.',
-							),
-				'_webhook_url' 			=> array(
-								'type'		=> 	'disabled',
-								'label'		=> 	'Order Delivery URL',
-								'default'	=>	home_url("/wp-json/".$this->plugin::CUSTOM_POST_TYPE.$this->plugin::API_VERSION."/wc-order"),
-								'title'		=>	'Your WooCommerce Webhook Delivery URL for orders.',
-								'info'		=>	'The order webhook end-point on this registration server.'
-							),
-				'_subsription_info' 	=> array(
-								'type'		=> 	'display',
-								'label'		=> 	'<span class="dashicons dashicons-info-outline"></span> Subscriptions',
-								'default'	=>	'By installing the <em>{eac}SoftwareRegistry Subscriptions for WooCommerce</a></em> '.
-												'plugin on your WooCommerce shop site, webhooks for subscriptions are made available '.
-												'and registrations can be updated when subscriptions are updated or renewed.'.
-												'<p>For subscriptions, you create another webhook in WooCommerce choosing <code>{eac}SoftwareRegistry Subscription updated</code> as the topic. '.
-												'Use the same <code>Webhook Secret</code> (above) with the <code>Subscription Delivery URL</code> (below).</p>',
-								'info'		=>	'See: <a href="https://swregistry.earthasylum.com/subscriptions-for-woocommerce/" target="_blank">{eac}SoftwareRegistry Subscriptions for WooCommerce</a>',
-							),
-				'_subscription_url' 	=> array(
-								'type'		=> 	'disabled',
-								'label'		=> 	'Subscription Delivery URL',
-								'default'	=>	home_url("/wp-json/".$this->plugin::CUSTOM_POST_TYPE.$this->plugin::API_VERSION."/wc-subscription"),
-								'title'		=>	'Your WooCommerce Webhook Delivery URL for subscriptions.',
-								'info'		=>	'The subscription webhook end-point on this registration server.'
-							),
-				'_options_info' 	=> array(
-								'type'		=> 	'display',
-								'label'		=> 	'<span class="dashicons dashicons-info-outline"></span> Options',
-								'default'	=>	'Webhook Processing Options.',
-							),
-				'registrar_webhook_type'=> array(
-								'type'		=> 	'radio',
-								'label'		=> 	'Registration Type',
-								'options'	=> 	[
-													['Per Item'		=> 'item'],
-													['Per Order'	=> 'order'],
-												],
-								'default'	=>	'item',
-								'title'		=>	'Create one registration for EACH item in the order (per item) -OR- '.
-												'Create one registration for ALL items in the order (per order).',
-							),
-				'registrar_webhook_items'=> array(
-								'type'		=> 	'textarea',
-								'label'		=> 	'Registration Item Mapping',
-								'title'		=>	'WooCommerce SKUs to be registered, mapped to registered package(s).',
-								'info'		=>	'Enter "sku=package" (or sku=sku), or enter "sku=package1,package2" to create a bundle.<br/>'.
-												'Enter 1 SKU per line. SKUs not listed will be ignored. '.
-												'<small>Regular expressions supported, e.g. "sku*=package"</small>',
-							),
-				'registrar_webhooks'	=> array(
-								'type'		=> 	'checkbox',
-								'label'		=> 	'Webhook Endpoints',
-								'options'	=>	[
-													['Order created (New Registration)'			=> 'create'],
-													['Order updated (Revise Registration)'		=> 'revise'],
-													['Order deleted (Deactivate Registration)'	=> 'deactivate'],
-													['Order restored (Activate Registration)'	=> 'activate'],
-													['Subscription Updated (New/Renew Registration)'=> 'subscription'],
-												],
-								'default'	=> 	['create','revise','deactivate','activate'],
-								'title'		=>	'Select the appropriate <code>Webhook Endpoints</code> based on the order and subscription webhooks created on your WooCommerce shop site.',
-								'info'		=> 	'Enable end-points on this server to allow access via webhooks from your WooCommerce shop site.',
-								'style'		=>	'display: block;',
-							),
-				'orders_with_subscriptions' => array(
-								'type'		=> 	'checkbox',
-								'label'		=> 	'Orders with Subscriptions',
-								'options'	=>	[
-													['Ignore Order Records with Subscriptions'	=> 'ignore'],
-												],
-								'default'	=>	'ignore',
-								'title'		=>	'When both orders and subscriptions are passed through WooCommerce webhooks, '.
-												'order records with subscriptions may be ignored while processing '.
-												'non-subscription orders and subscription records independently.',
-							),
-				'subscription_grace_period'=> array(
-								'type'		=> 	'select',
-								'label'		=> 	'Subscription Grace Period',
-								'options'	=> 	[
-													'None',
-													'1 day',
-													'3 days',
-													'5 days',
-													'1 week',
-													'2 weeks',
-													'3 weeks',
-													'1 month',
-												],
-								'title'		=>	'Normally, a registration is set to expire on the same day that the subscription is due to renew. '.
-												'By giving a grace period, the registration will remain active for some period after the renewal date.'
-							),
-			]
-		);
+		require_once 'includes/woocommerce_webhooks.options.php';
 	}
 
 
@@ -230,8 +125,6 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	{
 		$this->plugin->setApiSource('WebHook');
 		$this->plugin->setApiAction('webhook');
-		$this->webhookAction = $rest->get_header( 'x_wc_webhook_topic' );
-		$this->webhookSource = parse_url($rest->get_header( 'X-WC-Webhook-Source' ), PHP_URL_HOST);
 
 		if ( ($authKey = $rest->get_header( 'x_wc_webhook_signature' )) )
 		{
@@ -240,6 +133,8 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 
 			if ($hash == $authKey)
 			{
+				$this->webhookAction = $rest->get_header( 'x_wc_webhook_topic' );
+				$this->webhookSource = parse_url($rest->get_header( 'X-WC-Webhook-Source' ), PHP_URL_HOST);
 				switch ($this->webhookAction)
 				{
 					case 'order.created':
@@ -251,6 +146,8 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 					case 'order.restored':
 						return $this->is_option('registrar_webhooks','activate');
 					case 'action.wc_eacswregistry_subscription':
+						return $this->is_option('registrar_webhooks','subscription');
+					case 'action.wc_eacswregistry_sumosub':
 						return $this->is_option('registrar_webhooks','subscription');
 				}
 			}
@@ -288,7 +185,13 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	public function update_order_registration($rest)
 	{
 		$request = $this->plugin->getRequestParameters($rest);
-		if (is_wp_error($request)) return;
+		if (is_wp_error($request)) {
+			return rest_ensure_response([
+				'action'	=> $this->webhookAction,
+				'status' 	=> 'error',
+				'result'	=> $request->get_error_message(),
+			]);
+		}
 
 		$this->plugin->logDebug($request,__METHOD__);
 
@@ -297,29 +200,56 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		 */
 		if ($this->webhookAction == 'order.deleted')
 		{
-			foreach ($this->getRegistrationKeys( $request['id'] ) as $orderKeys)
+			$orderKeys = $this->getRegistrationKeys( $request['id'] );
+			foreach ($orderKeys as $orderKey)
 			{
-				$this->updateRegistrationKey( ['registry_key'=>$orderKeys->key_id], $request );
+				$this->updateRegistrationKey( ['registry_key'=>$orderKey->key_id], $request );
 			}
-			return;
+			return rest_ensure_response([
+				'action'	=> $this->webhookAction,
+				'resource'	=> $request['id'],
+				'status' 	=> 'success',
+				'result'	=> $this->result,
+			]);
 		}
 
 		if (isset($request['subscriptions']))
 		{
 			// we can ignore orders with subscriptions when we are processing subscriptions independently
-			if ($this->is_option('orders_with_subscriptions','ignore')) return;
+			if ($this->is_option('orders_with_subscriptions','ignore')) {
+				return rest_ensure_response([
+					'action'	=> $this->webhookAction,
+					'resource'	=> $request['id'],
+					'status' 	=> 'ignored',
+					'result'	=> 'order with subscription',
+				]);
+			}
 			// use the subscription parent order id
 			$request['id'] = current($request['subscriptions'])['parent_id'];
 		}
 		else
 		{
 			// We don't do subscription renewal orders unless we have the subscription, otherwise looks like a new order.
-			if ($request['created_via'] == 'subscription') return;
+			if (in_array($request['created_via'],['subscription','sumo_subs'])) {
+				return rest_ensure_response([
+					'action'	=> $this->webhookAction,
+					'resource'	=> $request['id'],
+					'status' 	=> 'ignored',
+					'result'	=> 'renewal order without subscription',
+				]);
+			}
 		}
 
 		// filter line items in the order
 		$request['line_items'] = $this->getLineItems($request, $request['subscriptions'] ?? []);
-		if (empty($request['line_items'])) return; // nothing to register
+		if (empty($request['line_items'])) {
+			return rest_ensure_response([
+				'action'	=> $this->webhookAction,
+				'resource'	=> $request['id'],
+				'status' 	=> 'ignored',
+				'result'	=> 'no subscription items found',
+			]);
+		}
 
 		// get existing registration
 		$orderKeys = $this->getRegistrationKeys( $request['id'] );
@@ -339,6 +269,13 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		{
 			$this->update_registration_key_by_item($registry, $request, $orderKeys);
 		}
+
+		return rest_ensure_response([
+			'action'	=> $this->webhookAction,
+			'resource'	=> $request['id'],
+			'status' 	=> 'success',
+			'result'	=> $this->result,
+		]);
 	}
 
 
@@ -351,13 +288,26 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	public function update_subscription_registration($rest)
 	{
 		$request = $this->plugin->getRequestParameters($rest);
-		if (is_wp_error($request)) return;
+		if (is_wp_error($request)) {
+			return rest_ensure_response([
+				'action'	=> $this->webhookAction,
+				'status' 	=> 'error',
+				'result'	=> $request->get_error_message(),
+			]);
+		}
 
 		$this->plugin->logDebug($request,__METHOD__);
 
 		// filter line items in the order
 		$request['line_items'] = $this->getLineItems($request, [ $request['id'] => $request ]);
-		if (empty($request['line_items'])) return; // nothing to register
+		if (empty($request['line_items'])) {
+			return rest_ensure_response([
+				'action'	=> $this->webhookAction,
+				'resource'	=> $request['id'],
+				'status' 	=> 'ignored',
+				'result'	=> 'no subscription items found',
+			]);
+		}
 
 		// use the subscription parent order id
 		$request['id'] = $request['parent_id'];
@@ -377,7 +327,13 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		{
 			$this->update_registration_key_by_item($registry, $request, $orderKeys);
 		}
-		return;
+
+		return rest_ensure_response([
+			'action'	=> $this->webhookAction,
+			'resource'	=> $request['id'],
+			'status' 	=> 'success',
+			'result'	=> $this->result,
+		]);
 	}
 
 
@@ -536,7 +492,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 					case 'failed':
 						// no break
 					default:
-						if ($request['created_via'] == 'subscription') {
+						if (in_array($request['created_via'],['subscription','sumo_subs'])) {
 							$this->plugin->setApiAction('renew');
 							$result = $this->plugin->revise_registration_key($registry);
 						} else if (isset($request['post_id'])) {
@@ -598,6 +554,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 				break;
 
 			case 'action.wc_eacswregistry_subscription':
+			case 'action.wc_eacswregistry_sumosub':
 
 				$this->plugin->emailToClient(true);
 				if (!isset($request['post_id']))
@@ -618,6 +575,15 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 				break;
 		}
 
+		if ($result->is_error()) {
+			$result = (array)$result->get_data();
+			$this->result[] = array($registry['registry_product'] => [
+				$result['status']['code'] 	=> $result['error']['message'] ]);
+		} else {
+			$result = (array)$result->get_data();
+			$this->result[] = array($registry['registry_product'] => [
+				$result['status']['code'] 	=> $result['registration']['registry_key'] ]);
+		}
 		$this->plugin->logDebug([$registry,$result],__METHOD__.' '.$this->webhookAction);
 	}
 
@@ -689,7 +655,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		// paid date is set even when not collected during trial period
 		$trial 	= $this->getThisDate('trial',$line_item);
 		$paid 	= $this->getThisDate('paid',$line_item);
-		return (!$trial || $paid >= $trial) ? $paid : null;
+		return (!$trial || $paid >= $trial) ? $paid : false;
 	}
 
 
@@ -702,6 +668,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	private function setNextPayDate($line_item)
 	{
 		$today = $this->datetime();
+		$date = false;
 		// return false so we clear any previous value
 		if (isset($line_item['next']) && ($date = $line_item['next']))
 		{
@@ -917,14 +884,14 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 					$attributes = array_key_exists('attributes',$line_item) ? $line_item['attributes'] : [];
 					$_attributes = [];
 					foreach ( $attributes as $key => $value) {
-						$_attributes[ preg_replace('/^pa_(.+)/','$1',$key) ] = $value;
+						$_attributes[ preg_replace(['/^pa_(.+)/','/registry-/'],['$1','registry_'],$key) ] = $value;
 					}
 					// strip "pa_" prefix (product attribute)
 					$metadata = array_key_exists('meta_data',$line_item) ? $line_item['meta_data'] : [];
 					$_metadata = [];
 					foreach ( $metadata as $value) {
 						if ($value['key'][0] == '_') continue;
-						$_metadata[ preg_replace('/^pa_(.+)/','$1',$value['key']) ] = $value['value'];
+						$_metadata[ preg_replace(['/^pa_(.+)/','/registry-/'],['$1','registry_'],$key) ] = $value;
 					}
 					return [
 						'sku'			=> $line_item['sku'],
