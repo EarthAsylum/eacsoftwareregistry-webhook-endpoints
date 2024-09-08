@@ -16,7 +16,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	/**
 	 * @var string extension version
 	 */
-	const VERSION	= '24.0401.1';
+	const VERSION	= '24.0908.1';
 
 	/**
 	 * @var array result data
@@ -48,6 +48,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		'trial'			=> 'trial',				// trial subscription (resumed)
 		'expired'		=> 'expired',			// passed end date
 		'pending-cancel'=> 'pending-cancel', 	// cancelled, not yet past pre-paid date (invalid, retains current/default)
+		'suspended'		=> 'inactive',			// suspended, (sumo) past pre-paid date
 		'cancelled'		=> 'inactive',			// cancelled, past pre-paid date
 		'trash'			=> 'inactive',			// don't trash subscriptions, can't restore from here
 	];

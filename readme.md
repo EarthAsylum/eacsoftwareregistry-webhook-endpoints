@@ -7,8 +7,8 @@
 
 Plugin URI:         https://swregistry.earthasylum.com/webhooks-for-woocommerce/  
 Author:             [EarthAsylum Consulting](https://www.earthasylum.com)  
-Stable tag:         1.1.0  
-Last Updated:       04-Apr-2024  
+Stable tag:         1.1.1  
+Last Updated:       08-Sep-2024  
 Requires at least:  5.8  
 Tested up to:       6.6  
 Requires PHP:       7.4  
