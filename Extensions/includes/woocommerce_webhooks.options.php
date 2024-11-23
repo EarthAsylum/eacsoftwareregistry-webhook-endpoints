@@ -19,8 +19,8 @@ $this->registerExtension( $this->className,
 		'_order_info' 			=> array(
 						'type'		=> 	'display',
 						'label'		=> 	'<span class="dashicons dashicons-info-outline"></span> Orders',
-						'default'	=>	'WooCommerce Webhooks are used to create or update a registration when a WooCommerce order is created or updated.'.
-										'<p>Webhooks are created by going to: <code>WooCommerce &rarr; Settings &rarr; Advanced &rarr; Webhooks</code> from the dashboard of your WooCommerce shop site. '.
+						'default'	=>	'WooCommerce Webhooks are used to create or update a registration when a WooCommerce order is created or updated.',
+						'tooltip'	=>	'<p>Webhooks are created by going to: <code>WooCommerce &rarr; Settings &rarr; Advanced &rarr; Webhooks</code> from the dashboard of your WooCommerce shop site. '.
 										'Use <code>Webhook Secret</code> and <code>Order Delivery URL</code> (below) when creating your webhooks.</p>'.
 										'<p>You should create a webhook for <code>Order created</code> and <code>Order updated</code>, '.
 										'and you may optionally create webhooks for <code>Order deleted</code> and <code>Order restored</code> '.
@@ -46,8 +46,9 @@ $this->registerExtension( $this->className,
 						'label'		=> 	'<span class="dashicons dashicons-info-outline"></span> Subscriptions',
 						'default'	=>	'By installing the <em>{eac}SoftwareRegistry Subscriptions for WooCommerce</a></em> '.
 										'plugin on your WooCommerce shop site, webhooks for subscriptions are made available '.
-										'and registrations can be updated when subscriptions are updated or renewed.'.
-										'<p>For subscriptions, you create another webhook in WooCommerce choosing <code>{eac}SoftwareRegistry Subscription updated</code> as the topic. '.
+										'and registrations can be updated when subscriptions are updated or renewed.',
+						'tooltip'	=>	'<p>For subscriptions, you create another webhook in WooCommerce choosing <code>{eac}SoftwareRegistry WC Subscription</code> '.
+										'or <code>{eac}SoftwareRegistry Sumo Subscription</code> as the topic. '.
 										'Use the same <code>Webhook Secret</code> (above) with the <code>Subscription Delivery URL</code> (below).</p>',
 						'info'		=>	'See: <a href="https://swregistry.earthasylum.com/subscriptions-for-woocommerce/" target="_blank">{eac}SoftwareRegistry Subscriptions for WooCommerce</a>',
 					),
@@ -71,16 +72,17 @@ $this->registerExtension( $this->className,
 											['Per Order'	=> 'order'],
 										],
 						'default'	=>	'item',
-						'title'		=>	'Create one registration for EACH item in the order (per item) -OR- '.
+						'info'		=>	'Create one registration for EACH item in the order (per item) -OR- '.
 										'Create one registration for ALL items in the order (per order).',
 					),
 		'registrar_webhook_items'=> array(
 						'type'		=> 	'textarea',
 						'label'		=> 	'Registration Item Mapping',
-						'title'		=>	'WooCommerce SKUs to be registered, mapped to registered package(s).',
-						'info'		=>	'Enter "sku=package" (or sku=sku), or enter "sku=package1,package2" to create a bundle.<br/>'.
-										'Enter 1 SKU per line. SKUs not listed will be ignored. '.
-										'<small>Regular expressions supported, e.g. "sku*=package"</small>',
+						'info'		=>	'WooCommerce SKUs to be registered, mapped to registered package(s).<br/>'.
+										'Enter "sku=package" (or sku=sku), or enter "sku=package1,package2" to create a bundle. '.
+										'Enter 1 SKU per line. SKUs not listed will be ignored.<br/>'.
+										'<small>Regular expressions supported, e.g. "sku*=package"</small><br/>'.
+										'* Product meta-data (registry_product) may override this option.',
 					),
 		'registrar_webhooks'	=> array(
 						'type'		=> 	'checkbox',
@@ -93,8 +95,8 @@ $this->registerExtension( $this->className,
 											['Subscription Updated (New/Renew Registration)'=> 'subscription'],
 										],
 						'default'	=> 	['create','revise','deactivate','activate'],
-						'title'		=>	'Select the appropriate <code>Webhook Endpoints</code> based on the order and subscription webhooks created on your WooCommerce shop site.',
-						'info'		=> 	'Enable end-points on this server to allow access via webhooks from your WooCommerce shop site.',
+						'info'		=>	'Select the appropriate <code>Webhook Endpoints</code> based on the order and subscription webhooks created on your WooCommerce shop site.',
+						//				'Enable end-points on this server to allow access via webhooks from your WooCommerce shop site.',
 						'style'		=>	'display: block;',
 					),
 		'orders_with_subscriptions' => array(
@@ -104,7 +106,7 @@ $this->registerExtension( $this->className,
 											['Ignore Order Records with Subscriptions'	=> 'ignore'],
 										],
 						'default'	=>	'ignore',
-						'title'		=>	'When both orders and subscriptions are passed through WooCommerce webhooks, '.
+						'info'		=>	'When both orders and subscriptions are passed through WooCommerce webhooks, '.
 										'order records with subscriptions may be ignored while processing '.
 										'non-subscription orders and subscription records independently.',
 					),
@@ -121,7 +123,7 @@ $this->registerExtension( $this->className,
 											'3 weeks',
 											'1 month',
 										],
-						'title'		=>	'Normally, a registration is set to expire on the same day that the subscription is due to renew. '.
+						'info'		=>	'Normally, a registration is set to expire on the same day that the subscription is due to renew. '.
 										'By giving a grace period, the registration will remain active for some period after the renewal date.'
 					),
 	]

@@ -8,7 +8,6 @@ namespace EarthAsylumConsulting\Extensions;
  * @package		{eac}SoftwareRegistry
  * @author		Kevin Burkholder <KBurkholder@EarthAsylum.com>
  * @copyright	Copyright (c) 2024 EarthAsylum Consulting <www.earthasylum.com>
- * @version		2.x
  */
 
 class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
@@ -16,7 +15,17 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	/**
 	 * @var string extension version
 	 */
-	const VERSION	= '24.0908.1';
+	const VERSION	= '24.1123.1';
+
+	/**
+	 * @var string extension tab name
+	 */
+	const TAB_NAME 	= 'WooCommerce';
+
+	/**
+	 * @var string|array|bool to set (or disable) default group display/switch
+	 */
+	const ENABLE_OPTION	= 'WooCommerce WebHooks';
 
 	/**
 	 * @var array result data
@@ -71,7 +80,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 
 		if ($this->is_admin())
 		{
-			$this->registerExtension( [$this->className,'woocommerce'] );
+			$this->registerExtension( [$this->className,self::TAB_NAME] );
 			// Register plugin options when needed
 			$this->add_action( "options_settings_page", array($this, 'admin_options_settings') );
 		}
@@ -127,15 +136,26 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		$this->plugin->setApiSource('WebHook');
 		$this->plugin->setApiAction('webhook');
 
-		if ( ($authKey = $rest->get_header( 'x_wc_webhook_signature' )) )
+		if ( ($authKey = $rest->get_header( 'x-wc-webhook-signature' )) )
 		{
 			$hash 	= $this->get_option('registrar_webhook_key');
 			$hash 	= base64_encode(hash_hmac('sha256', $rest->get_body(), $hash, true));
 
 			if ($hash == $authKey)
 			{
-				$this->webhookAction = $rest->get_header( 'x_wc_webhook_topic' );
-				$this->webhookSource = parse_url($rest->get_header( 'X-WC-Webhook-Source' ), PHP_URL_HOST);
+				$this->webhookAction = $rest->get_header( 'x-wc-webhook-topic' );
+				$origin = parse_url($rest->get_header( 'x-wc-webhook-source' ));
+				$this->webhookSource = $origin['host'];
+				// allow CORS origin
+				$origin = $origin['scheme'].'://'.$origin['host'];
+				add_filter( 'http_origin', function() use ($origin) {
+					return $origin;
+				});
+				add_filter( 'allowed_http_origins', function ($allowed) use ($origin) {
+					$allowed[] = $origin;
+					return $allowed;
+				});
+
 				switch ($this->webhookAction)
 				{
 					case 'order.created':
@@ -313,14 +333,15 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		// use the subscription parent order id
 		$request['id'] = $request['parent_id'];
 
+		$transId = $request['switched_order'] ?? $request['id'];
 		// get existing registration
-		$orderKeys = $this->getRegistrationKeys( $request['id'] );
+		$orderKeys = $this->getRegistrationKeys( $transId );
 
 		// initialize the registry key
 		$registry = $this->initializeRegistry($request);
 
 		if ( (empty($orderKeys) && $this->is_option('registrar_webhook_type','order')) ||
-			 (key($orderKeys) == $this->formatTransId($request['id'])) )
+			 (key($orderKeys) == $this->formatTransId($transId)) )
 		{
 			$this->update_registration_key_by_order($registry, $request, $orderKeys);
 		}
@@ -349,15 +370,17 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	private function update_registration_key_by_order($order_registry, $request, $orderKeys=[])
 	{
 		$registry = $order_registry;
-		$trans_id = $this->formatTransId($request['id']);
-
-		$registry['registry_transid']		= $trans_id;
+		$trans_id = $this->formatTransId($request['switched_order'] ?? $request['id']);
 
 		if (isset($orderKeys[ $trans_id ]))
 		{
 			$request['post_id'] 			= $orderKeys[ $trans_id ]->post_id;
 			$registry['registry_key']		= $orderKeys[ $trans_id ]->key_id;
 		}
+
+		$trans_id = $this->formatTransId($request['id']);
+
+		$registry['registry_transid']		= $trans_id;
 
 		$items = array();
 		$price = $total = 0;
@@ -423,15 +446,17 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		foreach ($request['line_items'] as $line_sku => $line_item)
 		{
 			$registry = $order_registry;
-			$trans_id = $this->formatTransId($request['id'],$line_sku);
-
-			$registry['registry_transid']		= $trans_id;
+			$trans_id = $this->formatTransId($request['switched_order'] ?? $request['id'],$line_sku);
 
 			if (isset($orderKeys[ $trans_id ]))
 			{
 				$request['post_id'] 			= $orderKeys[ $trans_id ]->post_id;
 				$registry['registry_key']		= $orderKeys[ $trans_id ]->key_id;
 			}
+
+			$trans_id = $this->formatTransId($request['id'],$line_sku);
+
+			$registry['registry_transid']		= $trans_id;
 
 			$registry['registry_product']		= $line_sku;
 			$registry['registry_description']	= $line_item['name'];

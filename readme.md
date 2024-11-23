@@ -7,10 +7,10 @@
 
 Plugin URI:         https://swregistry.earthasylum.com/webhooks-for-woocommerce/  
 Author:             [EarthAsylum Consulting](https://www.earthasylum.com)  
-Stable tag:         1.1.1  
-Last Updated:       08-Sep-2024  
+Stable tag:         1.1.2  
+Last Updated:       23-Nov-2024  
 Requires at least:  5.8  
-Tested up to:       6.6  
+Tested up to:       6.7  
 Requires PHP:       7.4  
 Contributors:       [kevinburkholder](https://profiles.wordpress.org/kevinburkholder)  
 License:            GPLv3 or later  
@@ -88,7 +88,7 @@ By adding [{eac}SoftwareRegistry Subscriptions for WooCommerce](https://swregist
 
 *{eac}SoftwareRegistry Subscriptions for WooCommerce* is a plugin, installed on your WooCommerce site, that adds a custom Webhook topic for subscription updates to the WooCommerrce webhooks, and adds subscription and product data to WooCommerce order webhooks.
 
-On your WooCommerce site, add a new Webhook using **{eac}SoftwareRegistry Subscription updated** or **{eac}SoftwareRegistry Sumo Subscription** for the topic; the same **Webhook Secret** used for the order webhooks; and the **Subscription Delivery URL** rather than the **Order Delivery URL**.
+On your WooCommerce site, add a new Webhook using **{eac}SoftwareRegistry WC Subscription** or **{eac}SoftwareRegistry Sumo Subscription** for the topic; the same **Webhook Secret** used for the order webhooks; and the **Subscription Delivery URL** rather than the **Order Delivery URL**.
 
 With this plugin enabled, not only can you update registrations by order updates, but also by subscription updates, including renewals, expirations, and cancelations, making it easy to keep your registrations in sync with your subscriptions.
 
