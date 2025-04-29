@@ -7,10 +7,10 @@
 
 Plugin URI:         https://swregistry.earthasylum.com/webhooks-for-woocommerce/  
 Author:             [EarthAsylum Consulting](https://www.earthasylum.com)  
-Stable tag:         1.1.2  
-Last Updated:       23-Nov-2024  
+Stable tag:         1.1.3  
+Last Updated:       19-Apr-2025  
 Requires at least:  5.8  
-Tested up to:       6.7  
+Tested up to:       6.8  
 Requires PHP:       7.4  
 Contributors:       [kevinburkholder](https://profiles.wordpress.org/kevinburkholder)  
 License:            GPLv3 or later  
