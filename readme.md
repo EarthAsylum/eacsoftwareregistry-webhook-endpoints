@@ -13,6 +13,7 @@ Requires at least:  5.8
 Tested up to:       6.8  
 Requires PHP:       7.4  
 Contributors:       [kevinburkholder](https://profiles.wordpress.org/kevinburkholder)  
+Donate link:        https://github.com/sponsors/EarthAsylum  
 License:            GPLv3 or later  
 License URI:        https://www.gnu.org/licenses/gpl.html  
 Tags:               software registration, software registry, software license, WooCommerce, Webhooks, subscriptions, {eac}SoftwareRegistry  
