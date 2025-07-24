@@ -5,16 +5,15 @@
  * @category	WordPress Plugin
  * @package		{eac}SoftwareRegistry
  * @author		Kevin Burkholder <KBurkholder@EarthAsylum.com>
- * @copyright	Copyright (c) 2024 EarthAsylum Consulting <www.earthasylum.com>
- * @version		2.x
+ * @copyright	Copyright (c) 2025 EarthAsylum Consulting <www.earthasylum.com>
  *
  * included for admin_options_settings() method
- * @version 24.0330.1
+ * @version 25.0723.1
  */
 
 defined( 'ABSPATH' ) or exit;
 
-$this->registerExtension( $this->className,
+$this->registerExtensionOptions( $this->className,
 	[
 		'_order_info' 			=> array(
 						'type'		=> 	'display',

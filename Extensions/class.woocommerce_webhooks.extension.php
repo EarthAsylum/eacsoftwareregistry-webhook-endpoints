@@ -7,7 +7,7 @@ namespace EarthAsylumConsulting\Extensions;
  * @category	WordPress Plugin
  * @package		{eac}SoftwareRegistry
  * @author		Kevin Burkholder <KBurkholder@EarthAsylum.com>
- * @copyright	Copyright (c) 2024 EarthAsylum Consulting <www.earthasylum.com>
+ * @copyright	Copyright (c) 2025 EarthAsylum Consulting <www.earthasylum.com>
  */
 
 class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
@@ -15,7 +15,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	/**
 	 * @var string extension version
 	 */
-	const VERSION	= '24.1123.1';
+	const VERSION	= '25.0724.1';
 
 	/**
 	 * @var string extension tab name
@@ -699,7 +699,6 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		if (isset($line_item['next']) && ($date = $line_item['next']))
 		{
 			$date = $this->datetime($date);
-			if (! is_a($date,'DateTime')) return false;
 		}
 		return ($date > $today ) ? $date->format('Y-m-d') : false;
 	}
@@ -718,9 +717,8 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		if (isset($line_item[$name]) && ($date = $line_item[$name]))
 		{
 			$date = $this->datetime($date,$modify);
-			if (is_a($date,'DateTime')) return $date->format('Y-m-d');
+			return ($date) ? $date->format('Y-m-d') : null;
 		}
-
 		return null;
 	}
 
@@ -774,6 +772,8 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 		//	'registry_options'		=> array(),
 		//	'registry_domains'		=> array(),
 		//	'registry_sites'		=> array(),
+			'registry_timezone'		=> $request['registry_timezone'] ?: '',
+			'registry_locale'		=> $request['registry_locale'] ?: '',
 		);
 
 		return $registry;
@@ -994,15 +994,18 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	 *
 	 * @param string $date
 	 * @param string $modify time to add or subtract (+1 day)
-	 * @return object DateTime
+	 * @return object DateTime or null
 	 */
 	private function datetime( $date='now', $modify = null )
 	{
 		try {
 			$date = $this->plugin->getDateTimeUTC($date);				// UTC
 			$date = $this->plugin->getDateTimeInZone($date,$modify);	// registry default timezone
-		} catch (\Throwable $e) { $date = false; }
-		return (is_a($date,'DateTime')) ? $date : null;
+		} catch (\Throwable $e) {
+			$this->plugin->logDebug($e,__METHOD__);
+			$date = null;
+		}
+		return $date;
 	}
 }
 /**

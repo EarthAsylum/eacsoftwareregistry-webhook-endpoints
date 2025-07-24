@@ -1,8 +1,8 @@
 === {eac}SoftwareRegistry WooCommerce Webhook Endpoints  ===
 Plugin URI:         https://swregistry.earthasylum.com/webhooks-for-woocommerce/
 Author:             [EarthAsylum Consulting](https://www.earthasylum.com)
-Stable tag:         1.1.3
-Last Updated:       19-Apr-2025
+Stable tag:         1.1.4
+Last Updated:       24-Jul-2025
 Requires at least:  5.8
 Tested up to:       6.8
 Requires PHP:       7.4
@@ -221,6 +221,12 @@ You should receive a copy of the GNU General Public License along with this prog
 
 
 == Changelog ==
+
+= Version 1.1.4 – July 24, 2025 =
+
++   Added registry_timezone and registry_locale.
++   Changed datetime validation.
++   Compatible with WooCommerce 10.0.
 
 = Version 1.1.3 – April 19, 2025 =
 
