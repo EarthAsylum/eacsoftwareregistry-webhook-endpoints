@@ -15,7 +15,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	/**
 	 * @var string extension version
 	 */
-	const VERSION	= '25.0724.1';
+	const VERSION	= '25.0904.1';
 
 	/**
 	 * @var string extension tab name
@@ -37,6 +37,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 	 */
 	const ORDER_STATUS = [
 		'completed'		=> 'active',
+		'overdue'		=> 'active',
 		'pending'		=> 'pending',
 		'processing'	=> 'pending',
 		'on-hold'		=> 'pending',
@@ -863,7 +864,7 @@ class woocommerce_webhooks extends \EarthAsylumConsulting\abstract_extension
 							} else {
 								$line_item['subId']			= 0;
 								$line_item['orderId']		= $request['id'];
-								$line_item['status']		= self::ORDER_STATUS[ $request['status'] ];
+								$line_item['status']		= self::ORDER_STATUS[ $request['status'] ] ?? 'pending';
 								$line_item['start']			= $request['date_completed_gmt'] ?: null;
 								$line_item['paid']			= $request['date_paid_gmt'] ?: null;
 							}
