@@ -5,16 +5,16 @@
  * @category	WordPress Plugin
  * @package		{eac}SoftwareRegistry WooCommerce Webhook Endpoints
  * @author		Kevin Burkholder <KBurkholder@EarthAsylum.com>
- * @copyright	Copyright (c) 2025 EarthAsylum Consulting <www.earthasylum.com>
+ * @copyright	Copyright (c) 2026 EarthAsylum Consulting <www.earthasylum.com>
  * @uses		{eac}SoftwareRegistry
  *
  * @wordpress-plugin
  * Plugin Name:			{eac}SoftwareRegistry Webhook Endpoints
  * Description:			Software Registration Server WooCommerce Webhook Endpoints - enables the use of WooCommerce Webhooks to create or update a software registration.
- * Version:				1.1.5
+ * Version:				1.1.6
  * Requires at least:	5.8
- * Tested up to:		6.8
- * Requires PHP:		7.4
+ * Tested up to:		7.0
+ * Requires PHP:		8.1
  * Plugin URI:          https://swregistry.earthasylum.com/webhooks-for-woocommerce/
  * Author:				EarthAsylum Consulting
  * Author URI:			http://www.earthasylum.com
