@@ -1,0 +1,58 @@
+# GitHub workflow action to deploy plugin to wordpress.org repository when creating a new release.
+#
+# Define SVN_USERNAME, SVN_PASSWORD for wordpress.org credentials
+# Organization or Repository : Settings -> Secrets and Variables -> Actions
+#
+# wordpress.org plugin slug is the lower-case version of the repository name.
+# Expects tag name to be version (M.m.p) with or without proceeding "v" (v1.2.3 or 1.2.3)
+# Expects wordpress.org assets (images, icons, banners) to be in /.wp-assets.
+# Uses .distignore or .gitattributes for exclusions from deployment.
+#
+# See: https://github.com/10up/action-wordpress-plugin-deploy/
+# See: https://github.com/softprops/action-gh-release
+
+name: Deploy to WordPress.org SVN
+on:
+  release:
+    types: [published]
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  TAG_NAME:  ${{ github.ref_name }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Plugin-Slug
+      # SLUG is the plugin slug/folder name, used by deploy. Get VERSION from TAG_NAME
+      run: |
+        echo "SLUG=${REPO_NAME,,}" >>${GITHUB_ENV}
+        echo "VERSION=${TAG_NAME#v}" >>${GITHUB_ENV}
+
+    - name: Checkout-Code
+      # checkout the repository code
+      uses: actions/checkout@v7
+
+    - name: WordPress-Deploy
+      # deploy to WordPress, creating a WP installable .zip
+      uses: 10up/action-wordpress-plugin-deploy@stable
+      with:
+        generate-zip: true
+      env:
+        ASSETS_DIR: .wp-assets
+        SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+
+    - name: Rename-Zip
+      # rename zip file with repository name and version (tag)
+      run: mv ${SLUG}.zip ${REPO_NAME}.${VERSION}.zip
+
+    - name: Upload-Release-Asset
+      # upload {plugin-name}.{version}.zip to github release
+      uses: softprops/action-gh-release@v3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: ${{ github.workspace }}/${{ env.REPO_NAME }}.${{ env.VERSION }}.zip
