@@ -1,6 +1,6 @@
 # Directories
 .git                export-ignore
-#.github            export-ignore
+.github             export-ignore
 .wordpress-org      export-ignore
 .wp-assets          export-ignore
 tests               export-ignore
@@ -10,6 +10,7 @@ build               export-ignore
 .gitattributes      export-ignore
 .gitignore          export-ignore
 .distignore         export-ignore
+FUNDING.yml         export-ignore
 phpunit.xml         export-ignore
 composer.json       export-ignore
 composer.lock       export-ignore
