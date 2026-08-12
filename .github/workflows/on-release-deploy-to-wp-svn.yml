@@ -20,6 +20,9 @@ env:
   REPO_NAME: ${{ github.event.repository.name }}
   TAG_NAME:  ${{ github.ref_name }}
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
