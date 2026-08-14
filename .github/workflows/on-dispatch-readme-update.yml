@@ -1,0 +1,43 @@
+# GitHub workflow action on workflow_dispatch (manual run):
+#   In WordPress repository, update readme.txt and/or assets content.
+#
+# Define SVN_USERNAME, SVN_PASSWORD for wordpress.org credentials
+# Organization or Repository : Settings -> Secrets and Variables -> Actions
+#
+# wordpress.org plugin slug is the repository name (lower case).
+# Expects wordpress.org assets (screenshots, icons, banners) to be in /.wp-assets.
+#
+# See: https://github.com/10up/action-wordpress-plugin-asset-update/
+#
+# Version: 26.0814.1
+
+name: On Dispatch, update plugin readme & assets
+on:
+  # Manually run from GitHub Actions UI
+  workflow_dispatch:
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  update:
+    name: Update plugin readme/assets
+    runs-on: ubuntu-latest
+    steps:
+
+    # Get plugin SLUG (lower-case) from REPO_NAME
+    - name: Plugin-Slug
+      run: |
+        echo "SLUG=${REPO_NAME,,}" >>${GITHUB_ENV}
+
+    # Checkout the repository code
+    - name: Checkout-Code
+      uses: actions/checkout@v7
+
+    # Update readme.txt & assets to trunk and stable-tag in WordPress SVN
+    - name: Plugin-Update
+      uses: 10up/action-wordpress-plugin-asset-update@stable
+      env:
+        ASSETS_DIR: .wp-assets
+        SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
