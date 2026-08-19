@@ -1,0 +1,110 @@
+# GitHub workflow action when publishing a new release:
+#   Deploy plugin to wordpress.org repository.
+#   Adds {plugin-name}.{version}.zip to release assets.
+#
+# Define SVN_USERNAME, SVN_PASSWORD for wordpress.org credentials
+# Organization or Repository : Settings -> Secrets and Variables -> Actions
+#
+# wordpress.org plugin slug is the repository name (lower case).
+# Expects tag name to be version (M.m.p) with or without preceding "v" (v1.2.3 or 1.2.3)
+# Expects wordpress.org assets (screenshots, icons, banners) to be in /.wp-assets.
+# Uses .distignore or .gitattributes for exclusions from WP deployment or
+# only .distignore or default list for exclusions from zip archive.
+#
+# See: https://github.com/10up/action-wordpress-plugin-deploy/
+# See: https://github.com/softprops/action-gh-release
+#
+# Version: 26.0818.1
+
+name: On Release, deploy plugin
+on:
+  # When a release is published
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  TAG_NAME:  ${{ github.ref_name }}
+  WORKFLOW:  ${{ github.run_id }}
+
+jobs:
+  Deploy-Plugin:
+    name: Deploy plugin on release
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # Get plugin SLUG (lower-case) from REPO_NAME and VERSION (sans 'v') from TAG_NAME
+    - name: Get Plugin Slug
+      run: |
+        echo "SLUG=${REPO_NAME,,}" >>${GITHUB_ENV}
+        echo "VERSION=${TAG_NAME#v}" >>${GITHUB_ENV}
+
+    # Checkout the repository code
+    - name: Checkout Code
+      uses: actions/checkout@v7
+
+    # Use CURL HEAD to check WordPress repository for plugin
+    - name: Detect WordPress SVN
+      id: detect_wp
+      run: |
+        STATUS=$(curl -o /dev/null -s -w "%{http_code}" -I https://plugins.svn.wordpress.org/${SLUG}/)
+        echo "${SLUG} WP SVN STATUS=$STATUS"
+        if [[ "$STATUS" =~ ^2 ]]; then
+          echo "is_wp_plugin=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_wp_plugin=false" >> $GITHUB_OUTPUT
+        fi
+
+    # -- Has WordPress Repository (is_wp_plugin == 'true') -- #
+
+    # Deploy to WordPress trunk and tag
+    - name: Deploy To WordPress
+      if: steps.detect_wp.outputs.is_wp_plugin == 'true'
+      uses: 10up/action-wordpress-plugin-deploy@stable
+      with:
+        generate-zip: true
+      env:
+        ASSETS_DIR: .wp-assets
+        SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+
+    # Rename zip file with REPO_NAME and VERSION (tag)
+    - name: Rename WP Zip
+      if: steps.detect_wp.outputs.is_wp_plugin == 'true'
+      run: |
+        mv ${SLUG}.zip ${REPO_NAME}.${VERSION}.zip
+
+    # -- Doesn't Have WordPress Repository (is_wp_plugin == 'false') -- #
+
+    # Create zip archive from temp directory containing only files to include
+    - name: Create Zip Archive
+      if: steps.detect_wp.outputs.is_wp_plugin == 'false'
+      run: |
+        mkdir -p .${WORKFLOW}/${REPO_NAME}
+        rsync -rc --exclude-from=.distignore --exclude='.${WORKFLOW}' ./ ./.${WORKFLOW}/${REPO_NAME}/ || \
+        rsync -rc \
+            --exclude='.*' \
+            --exclude='/tests' \
+            --exclude='/build' \
+            --exclude='phpunit.xml*' \
+            --exclude='composer.json' \
+            --exclude='composer.lock' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
+        ./ ./.${WORKFLOW}/${REPO_NAME}/
+        cd .${WORKFLOW}
+        zip -r ../${REPO_NAME}.${VERSION}.zip ./${REPO_NAME}
+
+    # -- | -- #
+
+    # Upload {plugin-name}.{version}.zip to github release
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: ${{ github.workspace }}/${{ env.REPO_NAME }}.${{ env.VERSION }}.zip

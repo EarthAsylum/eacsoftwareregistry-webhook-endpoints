@@ -11,7 +11,7 @@
 #
 # Version: 26.0814.1
 
-name: On Dispatch, update plugin readme & assets
+name: On Dispatch, update readme
 on:
   # Manually run from GitHub Actions UI
   workflow_dispatch:
@@ -20,9 +20,10 @@ env:
   REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
-  update:
-    name: Update plugin readme/assets
+  Update-Plugin:
+    name: Update plugin readme and assets
     runs-on: ubuntu-latest
+
     steps:
 
     # Get plugin SLUG (lower-case) from REPO_NAME
