@@ -14,7 +14,7 @@
 # See: https://github.com/10up/action-wordpress-plugin-deploy/
 # See: https://github.com/softprops/action-gh-release
 #
-# Version: 26.0818.1
+# Version: 26.0822.1
 
 name: On Release, deploy plugin
 on:
@@ -103,8 +103,8 @@ jobs:
 
     # Upload {plugin-name}.{version}.zip to github release
     - name: Upload Release Asset
-      uses: softprops/action-gh-release@v3
+      run: |
+        ls -lh ./${REPO_NAME}.${VERSION}.zip
+        gh release upload ${TAG_NAME} ./${REPO_NAME}.${VERSION}.zip --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        files: ${{ github.workspace }}/${{ env.REPO_NAME }}.${{ env.VERSION }}.zip
